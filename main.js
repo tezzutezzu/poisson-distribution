@@ -1,7 +1,6 @@
-var ratio = window.devicePixelRatio || 1;
 var settings = {
     radius: 3,
-    radiusDistance: 4,
+    radiusDistance: 10,
     tries: 100
 };
 
@@ -12,60 +11,40 @@ var img;
 var timeOutId;
 
 /* dom elements */
-var intro = document.querySelector('#intro');
 var svg = document.querySelector('#svg');
+var container = document.querySelector('.container');
+var upload = document.querySelector('#upload');
 var imgCanvas = document.createElement('canvas');
+
 var ctx = imgCanvas.getContext('2d');
-var demobtn = document.querySelector('#demobtn');
-var defaultUploadBtn = document.querySelector('#upload');
+
 var firstTime = true;
 var isSaving = false;
 
-var gui = new dat.GUI();
+var gui;
 
-
-demobtn.addEventListener('click', function(e) {
-    init();
-});
-
-
-/* drop area */
-var dropzone = document.querySelector('body');
-
-dropzone.addEventListener('dragover', function() {
-    dropzone.addClass('hover');
-    return false;
-});
-
-dropzone.addEventListener('dragleave', function() {
-    dropzone.removeClass('hover');
-    return false;
-});
-
-dropzone.addEventListener('drop', function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    dropzone.removeClass('hover');
-
-    var files = e.originalEvent.dataTransfer.files;
+upload.addEventListener('change', function() {
+    var files = this.files;
     processFiles(files);
-
     return false;
 });
 
+function uploadfile() {
+    var event = new MouseEvent('click', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true
+    });
+    upload.dispatchEvent(event);
+}
 
 function processFiles(files) {
     if (files && typeof FileReader !== "undefined") {
-        for (var i = 0; i < files.length; i++) {
-
-            readFile(files[i]);
-        }
+        readFile(files[0]);
     } else {
         alert("error uploading files...");
     }
 }
-
-
 
 function readFile(file) {
     if ((/image/i).test(file.type)) {
@@ -74,20 +53,24 @@ function readFile(file) {
 
         //init reader onload event handlers
         reader.onload = function(e) {
-            var image = $('<img/>')
-                .load(function() {
-                    img = this;
-                    init();
-                })
-                .attr('src', e.target.result);
+            var image = new Image();
+            img = image;
+            image.onload = function() {
+                init();
+            }
+            image.src = e.target.result;
         };
 
         //begin reader read operation
         reader.readAsDataURL(file);
     } else {
         //some message for wrong file format
+        alert("invalid image format");
     }
 }
+
+
+
 
 
 
@@ -106,9 +89,8 @@ function init() {
 }
 
 function start(mouseX, mouseY) {
-
+    console.log('starting');
     isSaving = false;
-    intro.style.display = 'none';
 
     if (imgCanvas.width) ctx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
 
@@ -134,15 +116,14 @@ function start(mouseX, mouseY) {
     var y = mouseY || height / 2;
 
 
-    var r = settings.radiusDistance * ratio;
+    var r = settings.radiusDistance;
     var x0 = r;
     var y0 = r;
     var x1 = width - r;
     var y1 = height - r;
 
-    var active = -1;
     var k = settings.tries;
-    var id = ++active;
+    var id = 0;
     var inner2 = r * r;
     var A = 4 * r * r - inner2;
     var cellSize = r * Math.SQRT1_2;
@@ -177,8 +158,10 @@ function start(mouseX, mouseY) {
 
     function done() {
         if (firstTime) {
+            gui = new dat.GUI();
             gui.add(settings, 'radius', 1, 5);
             gui.add(settings, 'radiusDistance', 1, 10);
+            gui.add(window, 'uploadfile');
             gui.add(window, 'start');
             gui.add(window, 'savesvg');
             svg.addEventListener('click', function(e) {
@@ -260,14 +243,17 @@ function start(mouseX, mouseY) {
 
 function savesvg() {
     isSaving = true;
-    svg.attr({
-        version: '1.1',
-        xmlns: "http://www.w3.org/2000/svg"
-    });
-    var $div = $("<div/>");
-    $div.append(svg);
-    var t = $div.html();
-    var b64 = window.btoa(unescape(encodeURIComponent(t)));
-    $(".container").append($("<a href-lang='image/svg+xml' href='data:image/svg+xml;base64,\n" + b64 + "' title='file.svg'>Download</a>"));
+    svg.version = '1.1';
+    svg.xmlns = "http://www.w3.org/2000/svg";
+    var b64 = window.btoa(unescape(encodeURIComponent(svg)));
+
+    var a = document.createElement("a");
+    a["href-lang"] = 'image/svg+xml';
+    a.href = 'data:image/svg+xml;base64,\n' + b64;
+    a.title = 'file.svg';
+    a.innerHtml = "Download";
+    container.appendChild(a);
 
 }
+
+init();

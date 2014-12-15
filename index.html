@@ -14,53 +14,24 @@
 		body {
 			background: black;
 			color: #ddd;
-			font-family: 'Open Sans', 'Helvetica Neue';
-			display:flex;
-			align-items:center;
-			justify-content:center;
-			width:100%;
 		}
 
 		#upload {
 			display: none;
 		}
 
-		.text {	
-			margin-bottom: 8em;
-		}
-
-		body.hover {
-			background: #333;
-			opacity:.5;
-		}
-
-
 		.container {	
-			display:flex;
-			align-items:center;
-			justify-content:center;
 			width:800px;
 			height:800px;
 			text-align: center;
 		}
 
-		#svg {
-			display: none;
-		}
 	</style>
 </head>
 <body>
 	<div class="container">
-
-		<div id="intro">
-			<p>Drop an image here</p>
-			<p>or</p>
-			<p><button id="demobtn" >Try a demo</button></p>
-		</div>
-
-
 		<svg id="svg" xmlns="https://www.w3.org/2000/svg"></svg>
-
+		<input type="file" id="upload">
 	</div>
 
 </body>
