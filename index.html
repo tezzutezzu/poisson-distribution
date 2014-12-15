@@ -6,9 +6,10 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="description" content="Poisson disc distribution">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="http://yui.yahooapis.com/combo?pure/0.5.0/base-min.css">
 
 	<style type="text/css">
+
+
 
 		body {
 			background: black;
@@ -20,8 +21,9 @@
 			width:100%;
 		}
 
-	
-
+		#upload {
+			display: none;
+		}
 
 		.text {	
 			margin-bottom: 8em;
@@ -49,7 +51,14 @@
 </head>
 <body>
 	<div class="container">
-		<p class="text">Drop an image here</p>
+
+		<div id="intro">
+			<p>Drop an image here</p>
+			<p>or</p>
+			<p><button id="demobtn" >Try a demo</button></p>
+		</div>
+
+
 		<svg id="svg" xmlns="https://www.w3.org/2000/svg"></svg>
 
 	</div>
@@ -57,7 +66,6 @@
 </body>
 
 <script type="text/javascript" src="dat.gui.min.js"></script>
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script src="main.js"></script>
 
 </html>

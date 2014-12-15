@@ -1,57 +1,48 @@
 var ratio = window.devicePixelRatio || 1;
 var settings = {
     radius: 3,
-    radiusDistance: 2,
+    radiusDistance: 4,
     tries: 100
-}
+};
+
+
 var width;
 var height;
 var img;
+var timeOutId;
+
 /* dom elements */
-var svg = $('svg');
-var imgCanvas = $('<canvas />')[0];
+var intro = document.querySelector('#intro');
+var svg = document.querySelector('#svg');
+var imgCanvas = document.createElement('canvas');
 var ctx = imgCanvas.getContext('2d');
-var uploadBtn = $('#uploadbtn');
-var defaultUploadBtn = $('#upload');
+var demobtn = document.querySelector('#demobtn');
+var defaultUploadBtn = document.querySelector('#upload');
 var firstTime = true;
 var isSaving = false;
 
 var gui = new dat.GUI();
-gui.add(settings, 'radius', 1, 5);
-gui.add(settings, 'radiusDistance', 1, 10);
-// gui.add(settings, 'speed', -5, 5);
-// gui.add(settings, 'displayOutline');
 
 
-
-uploadBtn.on('click', function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    defaultUploadBtn.click();
+demobtn.addEventListener('click', function(e) {
+    init();
 });
-
-defaultUploadBtn.on('change', function() {
-    var files = $(this)[0].files;
-    processFiles(files);
-    return false;
-});
-
 
 
 /* drop area */
-var dropzone = $('body');
+var dropzone = document.querySelector('body');
 
-dropzone.on('dragover', function() {
+dropzone.addEventListener('dragover', function() {
     dropzone.addClass('hover');
     return false;
 });
 
-dropzone.on('dragleave', function() {
+dropzone.addEventListener('dragleave', function() {
     dropzone.removeClass('hover');
     return false;
 });
 
-dropzone.on('drop', function(e) {
+dropzone.addEventListener('drop', function(e) {
     e.stopPropagation();
     e.preventDefault();
     dropzone.removeClass('hover');
@@ -104,7 +95,9 @@ function init() {
 
     if (!img) {
         img = new Image();
-        img.onload = start;
+        img.onload = function() {
+            start();
+        }
         img.src = "eye.png";
     } else {
         start();
@@ -115,7 +108,7 @@ function init() {
 function start(mouseX, mouseY) {
 
     isSaving = false;
-    $(".text").hide();
+    intro.style.display = 'none';
 
     if (imgCanvas.width) ctx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
 
@@ -129,14 +122,18 @@ function start(mouseX, mouseY) {
 
     ctx.drawImage(img, 0, 0, width, height);
 
-    svg.empty();
-    svg.show();
-    svg.width(img.width);
-    svg.height(img.height);
+    while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+    }
+    svg.style.display = 'block';
+    svg.style.width = img.width + "px";
+    svg.style.height = img.height + "px";
 
 
     var x = mouseX || width / 2;
     var y = mouseY || height / 2;
+
+
     var r = settings.radiusDistance * ratio;
     var x0 = r;
     var y0 = r;
@@ -156,6 +153,7 @@ function start(mouseX, mouseY) {
     var n = 0;
     var count = -1;
 
+    clearTimeout(timeOutId);
     emitSample([x, y]);
     go();
 
@@ -174,15 +172,17 @@ function start(mouseX, mouseY) {
             }
             if (j === k) queue[i] = queue[--n], queue.pop();
         };
-        (n > 0) ? requestAnimationFrame(go) : done();
+        (n > 0) ? timeOutId = setTimeout(go, 10) : done();
     }
 
     function done() {
         if (firstTime) {
+            gui.add(settings, 'radius', 1, 5);
+            gui.add(settings, 'radiusDistance', 1, 10);
             gui.add(window, 'start');
             gui.add(window, 'savesvg');
-            svg.click(function(e) {
-                var parentOffset = $(this).parent().offset();
+            svg.addEventListener('click', function(e) {
+                var parentOffset = svg.parentNode.getBoundingClientRect;
                 var x = e.pageX - parentOffset.left;
                 var y = e.pageY - parentOffset.top;
                 start(x, y);
@@ -196,7 +196,6 @@ function start(mouseX, mouseY) {
     function emitSample(p) {
         queue.push(p), ++n;
         grid[gridWidth * (p[1] / cellSize | 0) + (p[0] / cellSize | 0)] = p;
-
         var pixelData = imgCanvas.getContext('2d').getImageData(p[0], p[1], 1, 1).data;
         /* http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color */
         var luminance = (0.299 * pixelData[0] + 0.587 * pixelData[1] + 0.114 * pixelData[2]);
@@ -209,7 +208,7 @@ function start(mouseX, mouseY) {
             r: newRadius,
             fill: 'white'
         });
-        svg.append(circle);
+        svg.appendChild(circle);
     }
 
     function makeSVG(tag, attrs) {
