@@ -1,7 +1,8 @@
 var settings = {
     radius: 3,
     radiusDistance: 10,
-    tries: 100
+    tries: 100,
+    lines: true
 };
 
 
@@ -13,6 +14,7 @@ var timeOutId;
 /* dom elements */
 var svg = document.querySelector('#svg');
 var container = document.querySelector('.container');
+var svgcontainer = document.querySelector('#svgcontainer');
 var upload = document.querySelector('#upload');
 var imgCanvas = document.createElement('canvas');
 
@@ -147,7 +149,7 @@ function start(mouseX, mouseY) {
             for (var j = 0; j < k; ++j) {
                 var q = generateAround(p);
                 if (withinExtent(q) && !near(q)) {
-                    emitSample(q);
+                    emitSample(q, p);
                     break;
                 }
             }
@@ -159,6 +161,7 @@ function start(mouseX, mouseY) {
     function done() {
         if (firstTime) {
             gui = new dat.GUI();
+            gui.add(settings, 'lines');
             gui.add(settings, 'radius', 1, 5);
             gui.add(settings, 'radiusDistance', 1, 10);
             gui.add(window, 'uploadfile');
@@ -176,7 +179,7 @@ function start(mouseX, mouseY) {
 
 
 
-    function emitSample(p) {
+    function emitSample(p, ne) {
         queue.push(p), ++n;
         grid[gridWidth * (p[1] / cellSize | 0) + (p[0] / cellSize | 0)] = p;
         var pixelData = imgCanvas.getContext('2d').getImageData(p[0], p[1], 1, 1).data;
@@ -191,6 +194,21 @@ function start(mouseX, mouseY) {
             r: newRadius,
             fill: 'white'
         });
+        if (ne && settings.lines) {
+            var line = makeSVG('line', {
+                x1: p[0],
+                y1: p[1],
+                x2: ne[0],
+                y2: ne[1],
+                style: 'stroke:rgb(' + luminance + ',' + luminance + ',' + luminance + ')'
+            });
+
+            // console.log('rgb(' + luminance + ',' + luminance + ',' + luminance + ')');
+            svg.appendChild(line);
+
+
+        }
+
         svg.appendChild(circle);
     }
 
@@ -242,17 +260,20 @@ function start(mouseX, mouseY) {
 
 
 function savesvg() {
-    isSaving = true;
     svg.version = '1.1';
     svg.xmlns = "http://www.w3.org/2000/svg";
-    var b64 = window.btoa(unescape(encodeURIComponent(svg)));
+    var data = (new XMLSerializer).serializeToString(svg);
 
-    var a = document.createElement("a");
-    a["href-lang"] = 'image/svg+xml';
-    a.href = 'data:image/svg+xml;base64,\n' + b64;
-    a.title = 'file.svg';
-    a.innerHtml = "Download";
-    container.appendChild(a);
+
+    //illustrator doesn't open https namespace!
+    data = data.replace("https", "http");
+
+    var blob = new Blob([data], {
+        type: "image/svg+xml;charset=utf-8"
+    });
+
+    saveAs(blob, "file.svg");
+
 
 }
 
