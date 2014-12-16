@@ -2,7 +2,7 @@ var settings = {
     radius: 3,
     radiusDistance: 10,
     tries: 100,
-    lines: true
+    lines: false
 };
 
 
@@ -104,6 +104,7 @@ function start(mouseX, mouseY) {
         width = imgCanvas.width = img.width * 800 / img.height;
     }
 
+    console.log(width, height);
     ctx.drawImage(img, 0, 0, width, height);
 
     while (svg.firstChild) {
